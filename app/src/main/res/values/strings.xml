@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">Hushify</string>
+    <string name="main_tagline">Silencia los anuncios de Spotify.</string>
+    <string name="status_group_notifications">Notificaciones</string>
+    <string name="status_group_battery">Batería</string>
+    <string name="status_listener_on">Todo listo</string>
+    <string name="status_listener_off">Falta permiso de acceso</string>
+    <string name="battery_status_ok">Sin restricciones</string>
+    <string name="battery_status_restricted">Permite ejecución sin optimizar</string>
+    <string name="battery_need_listener_hint">Antes concede acceso a notificaciones.</string>
+    <string name="cta_open_listener_settings">Conceder acceso</string>
+    <string name="channel_passive_name">Silencio durante anuncio</string>
+    <string name="channel_passive_description">Información cuando Hushify atenúa el audio porque detectó texto de publicidad.</string>
+    <string name="channel_keepalive_name">Servicio en segundo plano</string>
+    <string name="channel_keepalive_description">Permanecer disponible para vigilar notificaciones de Spotify.</string>
+    <string name="keepalive_notification_title">Hushify activo</string>
+    <string name="keepalive_notification_text">Vigilando notificaciones de Spotify.</string>
+    <string name="cta_disable_battery_optimization">Sin restricciones de batería</string>
+    <string name="cta_exit_app">Detener servicio</string>
+    <string name="passive_notification_ad_detected">Anuncio detectado: multimedia en silencio.</string>
+</resources>
