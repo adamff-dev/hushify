@@ -111,6 +111,7 @@ class MainActivity : ComponentActivity() {
     private fun syncListenerAndKeepAlive(): Boolean {
         val enabled = NotificationAccess.isSpotifyMuteListenerEnabled(this)
         if (enabled) {
+            NotificationAccess.requestListenerReconnect(this)
             HushKeepAliveService.start(this)
         } else {
             HushKeepAliveService.stop(this)

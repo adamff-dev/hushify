@@ -10,6 +10,7 @@ class BootCompletedReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
         if (intent?.action != Intent.ACTION_BOOT_COMPLETED) return
         if (!NotificationAccess.isSpotifyMuteListenerEnabled(context)) return
+        NotificationAccess.requestListenerReconnect(context.applicationContext)
         HushKeepAliveService.start(context.applicationContext)
     }
 }

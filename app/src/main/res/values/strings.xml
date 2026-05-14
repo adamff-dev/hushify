@@ -18,4 +18,5 @@
     <string name="cta_disable_battery_optimization">Sin restricciones de batería</string>
     <string name="cta_exit_app">Detener servicio</string>
     <string name="passive_notification_ad_detected">Anuncio detectado: multimedia en silencio.</string>
+    <string name="toast_listener_connected">Spotify detectado: esperando anuncios</string>
 </resources>

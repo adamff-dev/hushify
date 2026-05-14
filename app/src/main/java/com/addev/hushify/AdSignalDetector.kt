@@ -3,6 +3,7 @@ package com.addev.hushify
 import android.app.Notification
 import android.os.Bundle
 import android.media.MediaMetadata
+import androidx.core.app.NotificationCompat
 import java.text.Normalizer
 import java.util.Locale
 
@@ -148,13 +149,27 @@ internal object AdSignalDetector {
     }
 
     fun isLikelyAd(notification: Notification): Boolean {
-        val raw = collectText(notification)
-        if (raw.isBlank()) return false
-        val folded = asciiFold(raw.lowercase(Locale.ROOT))
-        val rawLower = raw.lowercase(Locale.ROOT)
+        return appliesAdPhraseHeuristic(collectText(notification))
+    }
+
+    /**
+     * True when [rawText] matches the same heuristic phrases as notifications.
+     * Used for Spotify [MediaMetadata] surfaced via MediaSession rather than extras.
+     */
+    fun appliesAdPhraseHeuristic(rawText: String): Boolean {
+        if (rawText.isBlank()) return false
+        val folded = asciiFold(rawText.lowercase(Locale.ROOT))
+        val rawLower = rawText.lowercase(Locale.ROOT)
         return AD_PHRASES.any { phrase ->
             phrase.isNotBlank() && (folded.contains(phrase) || rawLower.contains(phrase))
         }
+    }
+
+    fun concatenatedMediaMetadata(metadata: MediaMetadata?): String {
+        if (metadata == null) return ""
+        val sink = StringBuilder()
+        appendMediaMetadata(metadata, sink)
+        return sink.toString()
     }
 
     private fun asciiFold(source: String): String {
@@ -166,6 +181,9 @@ internal object AdSignalDetector {
         val extras = notification.extras
         val out = StringBuilder()
         if (extras != null) {
+            appendPrimaryNotificationCharSequences(extras, out)
+            appendInboxTextLinesCompat(extras, out)
+            appendMessagingStyleTexts(notification, out)
             flattenBundleStrings(extras, out)
         }
         notification.tickerText?.let {
@@ -177,8 +195,49 @@ internal object AdSignalDetector {
         return out.toString()
     }
 
+    /** Common extras Spotify/OEM layouts use; may be absent from naive bundle walks. */
+    private fun appendPrimaryNotificationCharSequences(extras: Bundle, sink: StringBuilder) {
+        val keys = arrayOf(
+            Notification.EXTRA_TITLE,
+            Notification.EXTRA_TITLE_BIG,
+            Notification.EXTRA_TEXT,
+            Notification.EXTRA_BIG_TEXT,
+            Notification.EXTRA_SUMMARY_TEXT,
+            Notification.EXTRA_SUB_TEXT,
+            Notification.EXTRA_INFO_TEXT,
+            NotificationCompat.EXTRA_SUB_TEXT,
+            NotificationCompat.EXTRA_SELF_DISPLAY_NAME,
+            "android.messagingStyleConversationTitleCompat",
+            "android.hiddenConversationTitleCompat",
+        )
+        for (key in keys) {
+            extras.getCharSequence(key)?.takeIf { it.isNotBlank() }
+                ?.let { sink.append('\n').append(it) }
+        }
+        extras.getCharSequenceArray(Notification.EXTRA_TEXT_LINES)?.forEach { line ->
+            if (line.isNotBlank()) sink.append('\n').append(line)
+        }
+    }
+
+    private fun appendInboxTextLinesCompat(extras: Bundle, sink: StringBuilder) {
+        extras.getCharSequenceArray(NotificationCompat.EXTRA_TEXT_LINES)?.forEach {
+            if (it.isNotBlank()) sink.append('\n').append(it)
+        }
+    }
+
+    private fun appendMessagingStyleTexts(notification: Notification, sink: StringBuilder) {
+        val extracted = NotificationCompat.MessagingStyle
+            .extractMessagingStyleFromNotification(notification) ?: return
+        extracted.conversationTitle?.takeIf { it.isNotBlank() }
+            ?.let { sink.append('\n').append(it) }
+        for (msg in extracted.messages) {
+            msg.text?.takeIf { it.isNotBlank() }?.let { sink.append('\n').append(it) }
+            msg.person?.name?.takeIf { it.isNotBlank() }?.let { sink.append('\n').append(it) }
+        }
+    }
+
     private fun flattenBundleStrings(bundle: Bundle, sink: StringBuilder, depth: Int = 0) {
-        if (depth > 4) return
+        if (depth > 8) return
         for (key in bundle.keySet()) {
             val value = bundle.get(key) ?: continue
             when (value) {
@@ -192,7 +251,7 @@ internal object AdSignalDetector {
                         is CharSequence -> sink.append('\n').append(item)
                         is String -> sink.append('\n').append(item)
                         is Bundle -> flattenBundleStrings(item, sink, depth + 1)
-                        else -> Unit
+                        else -> item?.let { appendIfJavaMessageParcelable(it, sink, depth + 1) }
                     }
                 }
                 is Iterable<*> -> value.forEach { item ->
@@ -201,16 +260,50 @@ internal object AdSignalDetector {
                         is CharSequence -> sink.append('\n').append(item)
                         is String -> sink.append('\n').append(item)
                         is Bundle -> flattenBundleStrings(item, sink, depth + 1)
-                        else -> Unit
+                        else -> item?.let { appendIfJavaMessageParcelable(it, sink, depth + 1) }
                     }
                 }
+                else -> appendIfJavaMessageParcelable(value, sink, depth + 1)
             }
         }
     }
 
+    private fun appendIfJavaMessageParcelable(value: Any, sink: StringBuilder, depth: Int) {
+        if (depth > 8) return
+        val clsName = value.javaClass.name
+        if (!looksLikeMessagingStyleMessage(clsName)) return
+        runCatching {
+            val textM = value.javaClass.getMethod("getText")
+            textM.invoke(value)?.let {
+                sink.append('\n').append(it)
+            }
+            val senderM = value.javaClass.methods.find { it.name == "getSender" && it.parameterCount == 0 }
+            senderM?.invoke(value)?.takeIfSendable()?.let { sink.append('\n').append(it) }
+        }
+    }
+
+    /** Framework / compat `MessagingStyle$Message` nested class naming varies by APK. */
+    private fun looksLikeMessagingStyleMessage(className: String): Boolean {
+        val simple = className.substringAfterLast('.').filter { it != '$' }
+        return className.contains("MessagingStyle") && simple.contains("Message")
+    }
+
+    private fun Any?.takeIfSendable(): Any? =
+        takeIf {
+            val s = "$it".trim()
+            s.isNotEmpty() && s != "null"
+        }
+
     private fun appendMediaMetadata(md: MediaMetadata, sink: StringBuilder) {
+        runCatching {
+            val d = md.description
+            d.title?.takeIf { it.isNotBlank() }?.let { sink.append('\n').append(it) }
+            d.subtitle?.takeIf { it.isNotBlank() }?.let { sink.append('\n').append(it) }
+            d.description?.takeIf { it.isNotBlank() }?.let { sink.append('\n').append(it) }
+        }
         for (key in MEDIA_METADATA_TEXT_KEYS) {
-            md.getString(key)?.let { sink.append('\n').append(it) }
+            md.getString(key)?.takeIf(String::isNotBlank)?.let { sink.append('\n').append(it) }
+            md.getText(key)?.takeIf(CharSequence::isNotBlank)?.let { sink.append('\n').append(it) }
         }
     }
 }
