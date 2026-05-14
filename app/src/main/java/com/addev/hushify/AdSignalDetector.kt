@@ -8,121 +8,69 @@ import java.text.Normalizer
 import java.util.Locale
 
 /**
- * Heuristic ad detection from notification payloads. Spotify does not expose a stable API;
- * when regional builds include words like "Advertisement" or "Publicidad" in the notification
- * extras, they are matched against [AD_PHRASES]. The set is built from [RAW_AD_PHRASES] by
- * folding accents and dropping any phrase that is already implied by substring [contains] of a
- * shorter kept phrase (e.g. "anuncios" implies "anuncio").
+ * Heuristic ad detection from notification payloads. Spotify does not expose a stable API.
+ *
+ * [RAW_AD_PHRASES] are the exact UI translations of Spotify resource `string/advertisement`
+ * extracted from bundled Spotify Universal APK via `aapt dump --values resources`;
+ * [buildMinimalPhraseSet] folds accents / removes substring-redundant entries for matching.
  */
 internal object AdSignalDetector {
 
     private val MARK_SEGMENT_REGEX = Regex("\\p{M}+")
 
+    /** Exact `string/advertisement` locales from Spotify universal APK (51 unique surfaces). */
     private val RAW_AD_PHRASES = listOf(
-        // English
-        "advertisement",
-        "advertizing",
-        "advertising",
-        "sponsor",
-        "sponsored",
-        "sponsor message",
-        "promotional",
-        "music promo",
-        "audio ad",
-        "video ad",
-        "commercial",
-        "ad break",
-        // Spanish / Iberoamerican
-        "anuncio",
-        "anuncios",
-        "publicidad",
-        "promocional",
-        "publicitaria",
-        "promoción",
-        "publicitario",
-        "propaganda",
-        "patrocinado",
-        // Portuguese (BR/PT + shared roots)
-        "anúncio",
-        "comercialização",
-        "publicidade sonora",
-        // French
-        "publicité",
-        "publicite",
-        "publicitaire",
-        "message publicitaire",
-        "messagerie publicitaire",
-        "coup de pub",
-        "bloc pub",
-        "spot publicitaire",
-        "promotion payante",
-        // German
-        "werbung",
-        "werbespot",
-        "werbepause",
-        // Italian
-        "pubblicità",
-        "pubblicita",
-        "messaggio pubblicitario",
-        "promozione",
-        // Dutch
-        "advertentie",
-        "reclamespot",
-        // Nordic / Baltic
-        "reklama",
-        "reklame",
-        "reklám",
-        "reklām",
-        "annonse",
-        "annonsering",
-        "mainos",
-        "mainosten",
-        // Turkish / Indonesian / Malay hints
-        "reklam",
-        "iklan",
-        // Romanian / similar Latin
-        "publicitate",
-        "reclamă",
-        // Polish / Czech hints
-        "reklamy",
-        "kampania reklamowa",
-        "kampania reklam",
-        // Hebrew (Occasionally in global builds)
+        "Advertensie",
+        "Advertentie",
+        "Advertisement",
+        "Annonse",
+        "Anunci",
+        "Anuncio",
+        "Anunț",
+        "Anúncio",
+        "Auglýsing",
+        "Iklan",
+        "Iragarkia",
+        "Isikhangiso",
+        "Mainos",
+        "Oglas",
+        "Propaganda",
+        "Pubblicità",
+        "Publicidad",
+        "Publicidade",
+        "Publicité",
+        "Quảng cáo",
+        "Reklaam",
+        "Reklam",
+        "Reklama",
+        "Reklame",
+        "Reklám",
+        "Reklāma",
+        "Tangazo",
+        "Werbung",
+        "Διαφήμιση",
+        "Реклама",
         "פרסומת",
-        // Asian scripts
-        "广告",
-        "廣告",
-        "広告",
-        "광고",
-        "ประกาศ",
-        // Arabic (common wording fragments)
+        "آگهی",
+        "إشهار",
         "إعلان",
-        "اعلان",
-        "اشهار",
-        // Cyrillic (Russian etc.)
-        "реклама",
-        "коммерческое",
-        "рекламный блок",
-        // Hindi / romanized cues some OEMs expose
+        "اشتہار",
+        "जाहिरात",
         "विज्ञापन",
-        // Greek fragments
-        "διαφημιση",
-        "διαφήμιση",
-        "χορηγ",
-        // Action / UI copy Spotify and OEMs sometimes expose (not in body text)
-        "skip ad",
-        "skip ads",
-        "saltar anuncio",
-        "saltar publicidad",
-        "omitir anuncio",
-        "omitir publicidad",
-        "pular anúncio",
-        "pular anuncio",
-        "überspringen",
-        "annonce überspringen",
-        "passer la pub",
-        "passer la publicité",
-        "salta annuncio",
+        "বিজ্ঞাপন",
+        "ਵਿਗਿਆਪਨ",
+        "જાહેરાત",
+        "ବିଜ୍ଞାପନ",
+        "விளம்பரம்",
+        "ప్రకటన",
+        "ಜಾಹೀರಾತು",
+        "പരസ്യം",
+        "โฆษณา",
+        "ማስታወቂያ",
+        "广告",
+        "広告",
+        "廣告",
+        "광고",
     )
 
     private val AD_PHRASES: List<String> = buildMinimalPhraseSet(RAW_AD_PHRASES)
