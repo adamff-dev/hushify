@@ -5,8 +5,11 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.os.PowerManager
 import android.provider.Settings
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -29,6 +32,7 @@ import androidx.compose.material.icons.filled.BatterySaver
 import androidx.compose.material.icons.filled.VolunteerActivism
 import androidx.compose.material.icons.outlined.BatteryChargingFull
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.MusicNote
 import androidx.compose.material.icons.outlined.StopCircle
 import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material.icons.outlined.NotificationsOff
@@ -38,6 +42,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -61,17 +66,31 @@ import com.addev.hushify.ui.theme.HushifyTheme
 
 class MainActivity : ComponentActivity() {
 
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private val deferredAutoOpenSpotify = Runnable {
+        openSpotify(showInstallHint = false)
+    }
+
     private val postNotificationPermission = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { _ -> }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val prefsForLaunchCheck = getSharedPreferences(PREFS_FILE, MODE_PRIVATE)
+        if (savedInstanceState == null && prefsForLaunchCheck.getBoolean(KEY_AUTO_OPEN_SPOTIFY, false)) {
+            Toast.makeText(this, R.string.toast_opening_spotify, Toast.LENGTH_SHORT).show()
+            mainHandler.postDelayed(deferredAutoOpenSpotify, AUTO_OPEN_SPOTIFY_DELAY_MS)
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             postNotificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
         enableEdgeToEdge()
         setContent {
+            val prefs = remember { getSharedPreferences(PREFS_FILE, MODE_PRIVATE) }
+            var autoOpenSpotify by remember {
+                mutableStateOf(prefs.getBoolean(KEY_AUTO_OPEN_SPOTIFY, false))
+            }
             val lifecycleOwner = LocalLifecycleOwner.current
             var listenerEnabled by remember { mutableStateOf(syncListenerAndKeepAlive()) }
             var batteryUnrestricted by remember { mutableStateOf(isIgnoringBatteryOptimizations()) }
@@ -107,12 +126,26 @@ class MainActivity : ComponentActivity() {
                                 )
                             )
                         },
+                        onOpenSpotifyClick = { openSpotify(showInstallHint = true) },
+                        autoOpenSpotifyEnabled = autoOpenSpotify,
+                        onAutoOpenSpotifyChange = { enabled ->
+                            prefs.edit().putBoolean(KEY_AUTO_OPEN_SPOTIFY, enabled).apply()
+                            autoOpenSpotify = enabled
+                            if (!enabled) {
+                                mainHandler.removeCallbacks(deferredAutoOpenSpotify)
+                            }
+                        },
                         onExitClick = { closeAppUi() },
                         modifier = Modifier.fillMaxSize()
                     )
                 }
             }
         }
+    }
+
+    override fun onDestroy() {
+        mainHandler.removeCallbacks(deferredAutoOpenSpotify)
+        super.onDestroy()
     }
 
     /** Stops foreground keep-alive, unbinds the notification listener, and removes this task from recents. */
@@ -157,6 +190,27 @@ class MainActivity : ComponentActivity() {
             )
         }
     }
+
+    private fun openSpotify(showInstallHint: Boolean): Boolean {
+        val launch = packageManager.getLaunchIntentForPackage(SpotifyAdMuteService.SPOTIFY_PACKAGE)?.apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        return if (launch != null) {
+            startActivity(launch)
+            true
+        } else {
+            if (showInstallHint) {
+                Toast.makeText(this, R.string.toast_spotify_not_installed, Toast.LENGTH_SHORT).show()
+            }
+            false
+        }
+    }
+
+    companion object {
+        private const val PREFS_FILE = "hushify_prefs"
+        private const val KEY_AUTO_OPEN_SPOTIFY = "auto_open_spotify"
+        private const val AUTO_OPEN_SPOTIFY_DELAY_MS = 2_800L
+    }
 }
 
 @Composable
@@ -167,6 +221,9 @@ private fun MainScreen(
     onBatteryClick: () -> Unit,
     onDonateClick: () -> Unit,
     onAboutClick: () -> Unit,
+    onOpenSpotifyClick: () -> Unit,
+    autoOpenSpotifyEnabled: Boolean,
+    onAutoOpenSpotifyChange: (Boolean) -> Unit,
     onExitClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -238,6 +295,23 @@ private fun MainScreen(
                     )
                 }
             }
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.pref_auto_launch_spotify),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f)
+            )
+            Switch(
+                checked = autoOpenSpotifyEnabled,
+                onCheckedChange = onAutoOpenSpotifyChange
+            )
         }
 
         if (!listenerEnabled) {
@@ -320,6 +394,22 @@ private fun MainScreen(
             Spacer(modifier = Modifier.width(10.dp))
             Text(stringResource(R.string.cta_exit_app))
         }
+
+        Button(
+            onClick = onOpenSpotifyClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp),
+            shape = RoundedCornerShape(14.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.MusicNote,
+                contentDescription = null,
+                modifier = Modifier.size(22.dp)
+            )
+            Spacer(modifier = Modifier.width(10.dp))
+            Text(stringResource(R.string.cta_open_spotify))
+        }
     }
 }
 
@@ -371,6 +461,9 @@ private fun MainScreenPreview() {
             onBatteryClick = {},
             onDonateClick = {},
             onAboutClick = {},
+            onOpenSpotifyClick = {},
+            autoOpenSpotifyEnabled = false,
+            onAutoOpenSpotifyChange = {},
             onExitClick = {}
         )
     }

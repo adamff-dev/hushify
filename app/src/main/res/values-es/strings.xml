@@ -16,6 +16,10 @@
     <string name="keepalive_notification_title">Hushify activo</string>
     <string name="keepalive_notification_text">Vigilando notificaciones de Spotify.</string>
     <string name="cta_disable_battery_optimization">Sin restricciones de batería</string>
+    <string name="cta_open_spotify">Abrir Spotify</string>
+    <string name="pref_auto_launch_spotify">Abrir Spotify al abrir Hushify</string>
+    <string name="toast_opening_spotify">Abriendo Spotify…</string>
+    <string name="toast_spotify_not_installed">Spotify no está instalado</string>
     <string name="cta_exit_app">Detener servicio</string>
     <string name="passive_notification_ad_detected">Anuncio detectado: multimedia en silencio.</string>
     <string name="toast_listener_connected">Spotify detectado: esperando anuncios</string>

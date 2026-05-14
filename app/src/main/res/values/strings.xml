@@ -16,6 +16,10 @@
     <string name="keepalive_notification_title">Hushify running</string>
     <string name="keepalive_notification_text">Watching Spotify notifications.</string>
     <string name="cta_disable_battery_optimization">No battery restrictions</string>
+    <string name="cta_open_spotify">Open Spotify</string>
+    <string name="pref_auto_launch_spotify">Open Spotify after opening Hushify</string>
+    <string name="toast_opening_spotify">Opening Spotify…</string>
+    <string name="toast_spotify_not_installed">Spotify is not installed</string>
     <string name="cta_exit_app">Stop service</string>
     <string name="passive_notification_ad_detected">Ad detected: media muted.</string>
     <string name="toast_listener_connected">Spotify detected: waiting for ads</string>
