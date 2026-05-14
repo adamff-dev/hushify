@@ -26,7 +26,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BatterySaver
+import androidx.compose.material.icons.filled.VolunteerActivism
 import androidx.compose.material.icons.outlined.BatteryChargingFull
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.StopCircle
 import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material.icons.outlined.NotificationsOff
 import androidx.compose.material3.Button
@@ -93,6 +96,17 @@ class MainActivity : ComponentActivity() {
                         batteryUnrestricted = batteryUnrestricted,
                         onGrantClick = { openNotificationListenerSettings() },
                         onBatteryClick = { openBatteryOptimizationExemption() },
+                        onDonateClick = {
+                            startActivity(Intent(this, DonationActivity::class.java))
+                        },
+                        onAboutClick = {
+                            startActivity(
+                                Intent(
+                                    Intent.ACTION_VIEW,
+                                    Uri.parse("https://github.com/adamff-dev/hushify")
+                                )
+                            )
+                        },
                         onExitClick = { closeAppUi() },
                         modifier = Modifier.fillMaxSize()
                     )
@@ -151,6 +165,8 @@ private fun MainScreen(
     batteryUnrestricted: Boolean,
     onGrantClick: () -> Unit,
     onBatteryClick: () -> Unit,
+    onDonateClick: () -> Unit,
+    onAboutClick: () -> Unit,
     onExitClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -267,9 +283,41 @@ private fun MainScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         TextButton(
+            onClick = onDonateClick,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(
+                imageVector = Icons.Filled.VolunteerActivism,
+                contentDescription = null,
+                modifier = Modifier.size(22.dp)
+            )
+            Spacer(modifier = Modifier.width(10.dp))
+            Text(stringResource(R.string.donate))
+        }
+
+        TextButton(
+            onClick = onAboutClick,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Info,
+                contentDescription = null,
+                modifier = Modifier.size(22.dp)
+            )
+            Spacer(modifier = Modifier.width(10.dp))
+            Text(stringResource(R.string.about))
+        }
+
+        TextButton(
             onClick = onExitClick,
             modifier = Modifier.fillMaxWidth()
         ) {
+            Icon(
+                imageVector = Icons.Outlined.StopCircle,
+                contentDescription = null,
+                modifier = Modifier.size(22.dp)
+            )
+            Spacer(modifier = Modifier.width(10.dp))
             Text(stringResource(R.string.cta_exit_app))
         }
     }
@@ -321,6 +369,8 @@ private fun MainScreenPreview() {
             batteryUnrestricted = false,
             onGrantClick = {},
             onBatteryClick = {},
+            onDonateClick = {},
+            onAboutClick = {},
             onExitClick = {}
         )
     }

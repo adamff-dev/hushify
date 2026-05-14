@@ -35,6 +35,13 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".DonationActivity"
+            android:exported="false"
+            android:label="@string/donation_screen_title"
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/Theme.Hushify.Donation" />
+
         <service
             android:name=".SpotifyAdMuteService"
             android:exported="true"

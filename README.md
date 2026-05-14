@@ -46,6 +46,20 @@ Open the project in **Android Studio** with a recent **AGP** / **Kotlin** toolch
 
 Processing is **on-device**. Hushify does not send notification content to a server as part of this design (verify the codebase if you extend it).
 
+## Contribution
+
+We welcome contributions of any kind — code, documentation, bug reports, or feature suggestions.
+
+If you find this project helpful and want to support its development, consider making a donation.
+
+Your support helps keep the project active and maintained. Thank you! 🙌
+
+<div style="display: flex; gap: 10px;">
+  <a target="_blank" href="https://www.buymeacoffee.com/rSiZtB3"><img style="height: 50px" src="https://i.imgur.com/KCk0bxY.png" alt="Buy Me a Coffee" /></a>
+  <a target="_blank" href="https://www.paypal.com/donate/?hosted_button_id=3T9XNAPWW36Z2"><img style="height: 50px" src="https://i.imgur.com/Z3x38ey.png" alt="Donate with PayPal" /></a>
+  <a target="_blank" href="https://ko-fi.com/adamffdev"><img style="height: 50px" src="https://cdn.prod.website-files.com/5c14e387dab576fe667689cf/670f5a02fad2b4c413af6d15_support_me_on_kofi_badge_beige.png" alt="Support on Ko-fi" /></a>
+</div>
+
 ## License
 
 No license file is included in this repository yet; add one if you publish or accept contributions.

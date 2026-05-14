@@ -14,6 +14,7 @@ import android.media.AudioManager
 import android.media.session.MediaController
 import android.media.session.MediaSession
 import android.media.session.MediaSessionManager
+import android.media.session.PlaybackState
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -104,7 +105,9 @@ class SpotifyAdMuteService : NotificationListenerService() {
         HushKeepAliveService.start(this)
         hadSpotifyNotificationsInTray =
             activeNotifications?.any { it.packageName == SPOTIFY_PACKAGE } ?: false
-        showSpotifyListeningToast()
+        if (hadSpotifyNotificationsInTray) {
+            showSpotifyListeningToast()
+        }
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
@@ -142,15 +145,52 @@ class SpotifyAdMuteService : NotificationListenerService() {
 
     private fun applyAdStateFromSpotifyNotifications(spotify: List<StatusBarNotification>) {
         if (spotify.isEmpty()) {
-            if (mutedForAd) endMuteSession()
+            if (mutedForAd) {
+                if (shouldDeferUnmuteDueToPausedOrQuietSpotify()) {
+                    muteHandler.removeCallbacks(idleRecheckRunnable)
+                    muteHandler.postDelayed(idleRecheckRunnable, EMPTY_REEVALUATION_MS)
+                } else {
+                    endMuteSession()
+                }
+            }
             return
         }
         val anyAd = spotify.any { AdSignalDetector.isLikelyAd(it.notification) } ||
             spotifyAdSignalFromSessions(spotify)
         when {
             anyAd && !mutedForAd -> beginMuteSession()
-            !anyAd && mutedForAd -> endMuteSession()
+            !anyAd && mutedForAd -> {
+                if (!shouldDeferUnmuteDueToPausedOrQuietSpotify()) {
+                    endMuteSession()
+                } else {
+                    muteHandler.removeCallbacks(idleRecheckRunnable)
+                    muteHandler.postDelayed(idleRecheckRunnable, EMPTY_REEVALUATION_MS)
+                }
+            }
         }
+    }
+
+    private fun primarySpotifyController(): MediaController? {
+        val msm = getSystemService(MEDIA_SESSION_SERVICE) as? MediaSessionManager ?: return null
+        val component = ComponentName(this, SpotifyAdMuteService::class.java)
+        return try {
+            msm.getActiveSessions(component).firstOrNull { it.packageName == SPOTIFY_PACKAGE }
+        } catch (_: SecurityException) {
+            null
+        }
+    }
+
+    /**
+     * When paused, Spotify often drops ad wording from the media notification/metadata while the
+     * ad is still queued — unmuting looks like volume "coming back on resume". Only clear the mute
+     * session once playback hits [PlaybackState.STATE_PLAYING] without an ad signal.
+     *
+     * If there is no session (force-stop), do not defer: allow volume restore like before.
+     */
+    private fun shouldDeferUnmuteDueToPausedOrQuietSpotify(): Boolean {
+        val controller = primarySpotifyController() ?: return false
+        val state = controller.playbackState ?: return false
+        return state.state != PlaybackState.STATE_PLAYING
     }
 
     /**

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:fillViewport="true">
+    <LinearLayout
+        android:id="@+id/donation_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/donation_help_development"
+            android:textAlignment="center"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="24dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/donation_traditional_methods"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="16sp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Buy Me a Coffee + Ko-fi (misma altura, alineados a la izquierda) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:baselineAligned="false"
+            android:gravity="center_vertical|start"
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp">
+            <ImageView
+                android:id="@+id/img_buymeacoffee"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/donation_badge_height"
+                android:adjustViewBounds="true"
+                android:scaleType="fitCenter"
+                android:src="@drawable/buymeacoffee"
+                android:contentDescription="@string/donation_buymeacoffee_cd" />
+            <ImageView
+                android:id="@+id/img_kofi"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/donation_badge_height"
+                android:layout_marginStart="12dp"
+                android:adjustViewBounds="true"
+                android:scaleType="fitCenter"
+                android:src="@drawable/kofi_badge"
+                android:contentDescription="@string/donation_kofi_cd" />
+        </LinearLayout>
+
+        <!-- PayPal (misma altura, alineado a la izquierda) -->
+        <ImageView
+            android:id="@+id/img_paypal"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/donation_badge_height"
+            android:layout_gravity="start"
+            android:layout_marginBottom="24dp"
+            android:adjustViewBounds="true"
+            android:maxWidth="280dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/paypal"
+            android:contentDescription="@string/donation_paypal_cd" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/donation_crypto_methods"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="16sp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Las direcciones se agregarán dinámicamente aquí -->
+    </LinearLayout>
+</ScrollView>

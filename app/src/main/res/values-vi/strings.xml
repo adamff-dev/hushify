@@ -1,0 +1,34 @@
+<resources>
+    <string name="app_name">Hushify</string>
+    <string name="main_tagline">Tắt tiếng quảng cáo Spotify.</string>
+    <string name="status_group_notifications">Thông báo</string>
+    <string name="status_group_battery">Pin</string>
+    <string name="status_listener_on">Sẵn sàng</string>
+    <string name="status_listener_off">Cần quyền truy cập thông báo</string>
+    <string name="battery_status_ok">Không hạn chế</string>
+    <string name="battery_status_restricted">Cho phép chạy nền không hạn chế</string>
+    <string name="battery_need_listener_hint">Hãy cấp quyền thông báo trước.</string>
+    <string name="cta_open_listener_settings">Cấp quyền</string>
+    <string name="channel_passive_name">Tắt tiếng khi có quảng cáo</string>
+    <string name="channel_passive_description">Hiển thị khi Hushify hạ âm lượng vì phát hiện chữ quảng cáo.</string>
+    <string name="channel_keepalive_name">Dịch vụ nền</string>
+    <string name="channel_keepalive_description">Duy trì hoạt động để theo dõi thông báo Spotify.</string>
+    <string name="keepalive_notification_title">Hushify đang chạy</string>
+    <string name="keepalive_notification_text">Đang theo dõi thông báo Spotify.</string>
+    <string name="cta_disable_battery_optimization">Không hạn chế pin</string>
+    <string name="cta_exit_app">Dừng dịch vụ</string>
+    <string name="passive_notification_ad_detected">Phát hiện quảng cáo: đã tắt tiếng phương tiện.</string>
+    <string name="toast_listener_connected">Đã phát hiện Spotify: đang chờ quảng cáo</string>
+
+    <string name="donate">Ủng hộ</string>
+    <string name="about">Giới thiệu</string>
+    <string name="donation_screen_title">Quyên góp</string>
+    <string name="copy_address">Sao chép</string>
+    <string name="address_copied">Đã sao chép địa chỉ</string>
+    <string name="donation_help_development">Hãy giúp duy trì phát triển và bảo trì ứng dụng này!</string>
+    <string name="donation_traditional_methods">Ủng hộ bằng phương thức truyền thống:</string>
+    <string name="donation_crypto_methods">Hoặc nếu bạn muốn, quyên góp bằng tiền mã hóa:</string>
+    <string name="donation_paypal_cd">Quyên góp qua PayPal</string>
+    <string name="donation_buymeacoffee_cd">Quyên góp qua Buy Me a Coffee</string>
+    <string name="donation_kofi_cd">Quyên góp qua Ko-fi</string>
+</resources>

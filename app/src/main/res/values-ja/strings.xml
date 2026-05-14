@@ -1,0 +1,34 @@
+<resources>
+    <string name="app_name">Hushify</string>
+    <string name="main_tagline">Spotifyの広告をミュート。</string>
+    <string name="status_group_notifications">通知</string>
+    <string name="status_group_battery">バッテリー</string>
+    <string name="status_listener_on">準備完了</string>
+    <string name="status_listener_off">通知へのアクセスが必要です</string>
+    <string name="battery_status_ok">制限なし</string>
+    <string name="battery_status_restricted">バックグラウンドで制限なく実行を許可</string>
+    <string name="battery_need_listener_hint">先に通知へのアクセスを許可してください。</string>
+    <string name="cta_open_listener_settings">アクセスを許可</string>
+    <string name="channel_passive_name">広告中はミュート</string>
+    <string name="channel_passive_description">広告らしいテキストを検出して音量を下げたときに表示されます。</string>
+    <string name="channel_keepalive_name">バックグラウンドサービス</string>
+    <string name="channel_keepalive_description">Spotifyの通知を監視するため常駐します。</string>
+    <string name="keepalive_notification_title">Hushify 実行中</string>
+    <string name="keepalive_notification_text">Spotifyの通知を監視しています。</string>
+    <string name="cta_disable_battery_optimization">バッテリー制限なし</string>
+    <string name="cta_exit_app">サービスを停止</string>
+    <string name="passive_notification_ad_detected">広告を検出：メディアをミュートしました。</string>
+    <string name="toast_listener_connected">Spotifyを検出：広告を待機中</string>
+
+    <string name="donate">寄付</string>
+    <string name="about">このアプリについて</string>
+    <string name="donation_screen_title">寄付</string>
+    <string name="copy_address">コピー</string>
+    <string name="address_copied">アドレスをコピーしました</string>
+    <string name="donation_help_development">このアプリの開発とメンテナンスの継続にご協力ください！</string>
+    <string name="donation_traditional_methods">一般的な方法でサポート：</string>
+    <string name="donation_crypto_methods">暗号資産での寄付も可能です：</string>
+    <string name="donation_paypal_cd">PayPalで寄付</string>
+    <string name="donation_buymeacoffee_cd">Buy Me a Coffeeで寄付</string>
+    <string name="donation_kofi_cd">Ko-fiで寄付</string>
+</resources>

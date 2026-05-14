@@ -1,0 +1,34 @@
+<resources>
+    <string name="app_name">Hushify</string>
+    <string name="main_tagline">Spotify विज्ञापनों को म्यूट करें।</string>
+    <string name="status_group_notifications">सूचनाएँ</string>
+    <string name="status_group_battery">बैटरी</string>
+    <string name="status_listener_on">सब तैयार है</string>
+    <string name="status_listener_off">सूचना पहुँच आवश्यक है</string>
+    <string name="battery_status_ok">प्रतिबंधित नहीं</string>
+    <string name="battery_status_restricted">पृष्ठभूमि में बिना प्रतिबंध चलने दें</string>
+    <string name="battery_need_listener_hint">पहले सूचना पहुँच दें।</string>
+    <string name="cta_open_listener_settings">पहुँच दें</string>
+    <string name="channel_passive_name">विज्ञापन के दौरान म्यूट</string>
+    <string name="channel_passive_description">जब Hushify विज्ञापन टेक्स्ट पाकर आवाज कम करता है तो दिखता है।</string>
+    <string name="channel_keepalive_name">पृष्ठभूमि सेवा</string>
+    <string name="channel_keepalive_description">Spotify सूचनाओं की निगरानी के लिए सक्रिय रहता है।</string>
+    <string name="keepalive_notification_title">Hushify चल रहा है</string>
+    <string name="keepalive_notification_text">Spotify सूचनाएँ देख रहा है।</string>
+    <string name="cta_disable_battery_optimization">बैटरी प्रतिबंध नहीं</string>
+    <string name="cta_exit_app">सेवा रोकें</string>
+    <string name="passive_notification_ad_detected">विज्ञापन मिला: मीडिया म्यूट।</string>
+    <string name="toast_listener_connected">Spotify मिला: विज्ञापनों की प्रतीक्षा</string>
+
+    <string name="donate">दान</string>
+    <string name="about">ऐप के बारे में</string>
+    <string name="donation_screen_title">दान</string>
+    <string name="copy_address">कॉपी करें</string>
+    <string name="address_copied">पता कॉपी हो गया</string>
+    <string name="donation_help_development">इस ऐप के विकास और रखरखाव में मदद करें!</string>
+    <string name="donation_traditional_methods">पारंपरिक तरीकों से समर्थन करें:</string>
+    <string name="donation_crypto_methods">या क्रिप्टोकरेंसी से दान करें:</string>
+    <string name="donation_paypal_cd">PayPal से दान</string>
+    <string name="donation_buymeacoffee_cd">Buy Me a Coffee से दान</string>
+    <string name="donation_kofi_cd">Ko-fi से दान</string>
+</resources>

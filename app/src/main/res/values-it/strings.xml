@@ -1,0 +1,34 @@
+<resources>
+    <string name="app_name">Hushify</string>
+    <string name="main_tagline">Silenzia le pubblicità di Spotify.</string>
+    <string name="status_group_notifications">Notifiche</string>
+    <string name="status_group_battery">Batteria</string>
+    <string name="status_listener_on">Tutto pronto</string>
+    <string name="status_listener_off">Accesso alle notifiche necessario</string>
+    <string name="battery_status_ok">Senza restrizioni</string>
+    <string name="battery_status_restricted">Consenti esecuzione in background senza restrizioni</string>
+    <string name="battery_need_listener_hint">Concedi prima l’accesso alle notifiche.</string>
+    <string name="cta_open_listener_settings">Concedi accesso</string>
+    <string name="channel_passive_name">Silenziato durante la pubblicità</string>
+    <string name="channel_passive_description">Mostrato quando Hushify abbassa il volume perché ha rilevato testo pubblicitario.</string>
+    <string name="channel_keepalive_name">Servizio in background</string>
+    <string name="channel_keepalive_description">Rimane attivo per monitorare le notifiche di Spotify.</string>
+    <string name="keepalive_notification_title">Hushify in esecuzione</string>
+    <string name="keepalive_notification_text">Monitoraggio notifiche Spotify.</string>
+    <string name="cta_disable_battery_optimization">Nessuna restrizione batteria</string>
+    <string name="cta_exit_app">Ferma servizio</string>
+    <string name="passive_notification_ad_detected">Pubblicità rilevata: media silenziati.</string>
+    <string name="toast_listener_connected">Spotify rilevato: in attesa di pubblicità</string>
+
+    <string name="donate">Dona</string>
+    <string name="about">Informazioni</string>
+    <string name="donation_screen_title">Donazioni</string>
+    <string name="copy_address">Copia</string>
+    <string name="address_copied">Indirizzo copiato</string>
+    <string name="donation_help_development">Aiuta a mantenere lo sviluppo e la manutenzione di questa app!</string>
+    <string name="donation_traditional_methods">Sostieni con metodi tradizionali:</string>
+    <string name="donation_crypto_methods">Oppure, se preferisci, dona in criptovalute:</string>
+    <string name="donation_paypal_cd">Dona con PayPal</string>
+    <string name="donation_buymeacoffee_cd">Dona con Buy Me a Coffee</string>
+    <string name="donation_kofi_cd">Dona con Ko-fi</string>
+</resources>

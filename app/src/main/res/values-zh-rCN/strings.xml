@@ -1,0 +1,34 @@
+<resources>
+    <string name="app_name">Hushify</string>
+    <string name="main_tagline">静音 Spotify 广告。</string>
+    <string name="status_group_notifications">通知</string>
+    <string name="status_group_battery">电池</string>
+    <string name="status_listener_on">一切就绪</string>
+    <string name="status_listener_off">需要通知访问权限</string>
+    <string name="battery_status_ok">未受限</string>
+    <string name="battery_status_restricted">允许不受限制的后台运行</string>
+    <string name="battery_need_listener_hint">请先授予通知访问权限。</string>
+    <string name="cta_open_listener_settings">授予权限</string>
+    <string name="channel_passive_name">广告期间静音</string>
+    <string name="channel_passive_description">当 Hushify 检测到广告相关文字并降低音量时显示。</string>
+    <string name="channel_keepalive_name">后台服务</string>
+    <string name="channel_keepalive_description">保持运行以监听 Spotify 通知。</string>
+    <string name="keepalive_notification_title">Hushify 运行中</string>
+    <string name="keepalive_notification_text">正在监听 Spotify 通知。</string>
+    <string name="cta_disable_battery_optimization">不限制电池</string>
+    <string name="cta_exit_app">停止服务</string>
+    <string name="passive_notification_ad_detected">检测到广告：媒体已静音。</string>
+    <string name="toast_listener_connected">已检测到 Spotify：等待广告</string>
+
+    <string name="donate">捐赠</string>
+    <string name="about">关于</string>
+    <string name="donation_screen_title">捐赠</string>
+    <string name="copy_address">复制</string>
+    <string name="address_copied">地址已复制</string>
+    <string name="donation_help_development">帮助维护本应用的开发与更新！</string>
+    <string name="donation_traditional_methods">通过传统方式支持：</string>
+    <string name="donation_crypto_methods">或者，您也可以使用加密货币捐赠：</string>
+    <string name="donation_paypal_cd">使用 PayPal 捐赠</string>
+    <string name="donation_buymeacoffee_cd">使用 Buy Me a Coffee 捐赠</string>
+    <string name="donation_kofi_cd">使用 Ko-fi 捐赠</string>
+</resources>

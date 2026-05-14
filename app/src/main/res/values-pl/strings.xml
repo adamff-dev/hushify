@@ -1,0 +1,34 @@
+<resources>
+    <string name="app_name">Hushify</string>
+    <string name="main_tagline">Wyciszaj reklamy w Spotify.</string>
+    <string name="status_group_notifications">Powiadomienia</string>
+    <string name="status_group_battery">Bateria</string>
+    <string name="status_listener_on">Gotowe</string>
+    <string name="status_listener_off">Wymagany dostęp do powiadomień</string>
+    <string name="battery_status_ok">Bez ograniczeń</string>
+    <string name="battery_status_restricted">Zezwól na działanie w tle bez ograniczeń</string>
+    <string name="battery_need_listener_hint">Najpierw przyznaj dostęp do powiadomień.</string>
+    <string name="cta_open_listener_settings">Przyznaj dostęp</string>
+    <string name="channel_passive_name">Wyciszenie podczas reklamy</string>
+    <string name="channel_passive_description">Wyświetlane, gdy Hushify ścisza dźwięk po wykryciu tekstu reklamowego.</string>
+    <string name="channel_keepalive_name">Usługa w tle</string>
+    <string name="channel_keepalive_description">Pozostaje aktywna, aby monitorować powiadomienia Spotify.</string>
+    <string name="keepalive_notification_title">Hushify działa</string>
+    <string name="keepalive_notification_text">Monitorowanie powiadomień Spotify.</string>
+    <string name="cta_disable_battery_optimization">Bez ograniczeń baterii</string>
+    <string name="cta_exit_app">Zatrzymaj usługę</string>
+    <string name="passive_notification_ad_detected">Wykryto reklamę: multimedia wyciszone.</string>
+    <string name="toast_listener_connected">Wykryto Spotify: oczekiwanie na reklamy</string>
+
+    <string name="donate">Wesprzyj</string>
+    <string name="about">O aplikacji</string>
+    <string name="donation_screen_title">Darowizny</string>
+    <string name="copy_address">Kopiuj</string>
+    <string name="address_copied">Adres skopiowany</string>
+    <string name="donation_help_development">Pomóż utrzymać rozwój i konserwację tej aplikacji!</string>
+    <string name="donation_traditional_methods">Wesprzyj tradycyjnymi metodami:</string>
+    <string name="donation_crypto_methods">Albo przekaż darowiznę w kryptowalucie:</string>
+    <string name="donation_paypal_cd">Darowizna przez PayPal</string>
+    <string name="donation_buymeacoffee_cd">Darowizna przez Buy Me a Coffee</string>
+    <string name="donation_kofi_cd">Darowizna przez Ko-fi</string>
+</resources>

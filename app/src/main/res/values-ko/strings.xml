@@ -1,0 +1,34 @@
+<resources>
+    <string name="app_name">Hushify</string>
+    <string name="main_tagline">Spotify 광고를 음소거하세요.</string>
+    <string name="status_group_notifications">알림</string>
+    <string name="status_group_battery">배터리</string>
+    <string name="status_listener_on">준비 완료</string>
+    <string name="status_listener_off">알림 접근 권한이 필요합니다</string>
+    <string name="battery_status_ok">제한 없음</string>
+    <string name="battery_status_restricted">백그라운드에서 제한 없이 실행 허용</string>
+    <string name="battery_need_listener_hint">먼저 알림 접근 권한을 허용하세요.</string>
+    <string name="cta_open_listener_settings">접근 허용</string>
+    <string name="channel_passive_name">광고 중 음소거</string>
+    <string name="channel_passive_description">광고 관련 텍스트를 감지해 Hushify가 볼륨을 낮출 때 표시됩니다.</string>
+    <string name="channel_keepalive_name">백그라운드 서비스</string>
+    <string name="channel_keepalive_description">Spotify 알림을 감시하기 위해 계속 실행됩니다.</string>
+    <string name="keepalive_notification_title">Hushify 실행 중</string>
+    <string name="keepalive_notification_text">Spotify 알림을 감시 중입니다.</string>
+    <string name="cta_disable_battery_optimization">배터리 제한 없음</string>
+    <string name="cta_exit_app">서비스 중지</string>
+    <string name="passive_notification_ad_detected">광고 감지: 미디어 음소거됨.</string>
+    <string name="toast_listener_connected">Spotify 감지: 광고 대기 중</string>
+
+    <string name="donate">기부</string>
+    <string name="about">앱 정보</string>
+    <string name="donation_screen_title">기부</string>
+    <string name="copy_address">복사</string>
+    <string name="address_copied">주소가 복사되었습니다</string>
+    <string name="donation_help_development">이 앱의 개발과 유지보수를 도와주세요!</string>
+    <string name="donation_traditional_methods">일반적인 방법으로 후원:</string>
+    <string name="donation_crypto_methods">원하시면 암호화폐로도 기부할 수 있습니다:</string>
+    <string name="donation_paypal_cd">PayPal로 기부</string>
+    <string name="donation_buymeacoffee_cd">Buy Me a Coffee로 기부</string>
+    <string name="donation_kofi_cd">Ko-fi로 기부</string>
+</resources>

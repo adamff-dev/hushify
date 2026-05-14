@@ -1,0 +1,34 @@
+<resources>
+    <string name="app_name">Hushify</string>
+    <string name="main_tagline">Bisukan iklan Spotify.</string>
+    <string name="status_group_notifications">Notifikasi</string>
+    <string name="status_group_battery">Baterai</string>
+    <string name="status_listener_on">Siap</string>
+    <string name="status_listener_off">Perlu akses notifikasi</string>
+    <string name="battery_status_ok">Tanpa pembatasan</string>
+    <string name="battery_status_restricted">Izinkan berjalan di latar belakang tanpa batasan</string>
+    <string name="battery_need_listener_hint">Berikan akses notifikasi terlebih dahulu.</string>
+    <string name="cta_open_listener_settings">Berikan akses</string>
+    <string name="channel_passive_name">Dibisukan saat iklan</string>
+    <string name="channel_passive_description">Ditampilkan saat Hushify menurunkan volume karena mendeteksi teks iklan.</string>
+    <string name="channel_keepalive_name">Layanan latar belakang</string>
+    <string name="channel_keepalive_description">Tetap aktif untuk memantau notifikasi Spotify.</string>
+    <string name="keepalive_notification_title">Hushify berjalan</string>
+    <string name="keepalive_notification_text">Memantau notifikasi Spotify.</string>
+    <string name="cta_disable_battery_optimization">Tanpa batasan baterai</string>
+    <string name="cta_exit_app">Hentikan layanan</string>
+    <string name="passive_notification_ad_detected">Iklan terdeteksi: media dibisukan.</string>
+    <string name="toast_listener_connected">Spotify terdeteksi: menunggu iklan</string>
+
+    <string name="donate">Donasi</string>
+    <string name="about">Tentang</string>
+    <string name="donation_screen_title">Donasi</string>
+    <string name="copy_address">Salin</string>
+    <string name="address_copied">Alamat disalin</string>
+    <string name="donation_help_development">Bantu kembangkan dan rawat aplikasi ini!</string>
+    <string name="donation_traditional_methods">Dukung dengan cara tradisional:</string>
+    <string name="donation_crypto_methods">Atau jika Anda mau, donasi dengan kripto:</string>
+    <string name="donation_paypal_cd">Donasi dengan PayPal</string>
+    <string name="donation_buymeacoffee_cd">Donasi dengan Buy Me a Coffee</string>
+    <string name="donation_kofi_cd">Donasi dengan Ko-fi</string>
+</resources>
