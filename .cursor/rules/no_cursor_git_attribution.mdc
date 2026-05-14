@@ -1,0 +1,6 @@
+---
+description: No añadir atribución de Cursor a commits ni PR
+alwaysApply: true
+---
+
+No incluyas pies de tipo `Co-authored-by: Cursor`, `Made with Cursor`, ni atributos similares en mensajes de commit, PRs o descripciones, salvo petición explícita del usuario.
