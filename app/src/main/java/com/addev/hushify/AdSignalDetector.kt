@@ -7,6 +7,9 @@ import androidx.core.app.NotificationCompat
 import java.text.Normalizer
 import java.util.Locale
 
+private const val METADATA_KEY_ADVERTISEMENT = "android.media.metadata.ADVERTISEMENT"
+private const val SPOTIFY_AD_URI_PREFIX = "spotify:ad:"
+
 /**
  * Heuristic ad detection from notification payloads. Spotify does not expose a stable API.
  *
@@ -98,6 +101,25 @@ internal object AdSignalDetector {
 
     fun isLikelyAd(notification: Notification): Boolean {
         return appliesAdPhraseHeuristic(collectText(notification))
+    }
+
+    /**
+     * True when [MediaMetadata.METADATA_KEY_ADVERTISEMENT] is set to 1, which is the standard
+     * Android mechanism for players (including modern Spotify) to flag ad tracks.
+     */
+    fun isAdByMetadataFlag(metadata: MediaMetadata?): Boolean {
+        if (metadata == null) return false
+        return metadata.getLong(METADATA_KEY_ADVERTISEMENT) == 1L
+    }
+
+    /**
+     * True when the media ID looks like a Spotify ad URI (e.g. "spotify:ad:0abc123…").
+     * Spotify has used this URI scheme for ad tracks across multiple app versions.
+     */
+    fun isAdByMediaId(metadata: MediaMetadata?): Boolean {
+        if (metadata == null) return false
+        val id = metadata.getString(MediaMetadata.METADATA_KEY_MEDIA_ID) ?: return false
+        return id.startsWith(SPOTIFY_AD_URI_PREFIX, ignoreCase = true)
     }
 
     /**
