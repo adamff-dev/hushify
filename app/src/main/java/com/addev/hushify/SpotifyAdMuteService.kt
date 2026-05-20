@@ -42,6 +42,12 @@ class SpotifyAdMuteService : NotificationListenerService() {
     private var savedBluetoothScoVolume: Int = -1
     private var mutedForAd = false
 
+    private val unmuteRunnable = Runnable {
+        if (mutedForAd) {
+            endMuteSession()
+        }
+    }
+
     /**
      * True after we've shown [R.string.toast_listener_connected] for this bind.
      * Spotify often has no (or no usable) notification row while still exposing a media session;
@@ -97,6 +103,7 @@ class SpotifyAdMuteService : NotificationListenerService() {
                 ACTION_PROBE_IDLE_SHUTDOWN -> scheduleIdleCloseIfNeeded()
                 ACTION_STOP_FULLY -> {
                     idleHandler.removeCallbacks(idleExitRunnable)
+                    muteHandler.removeCallbacks(unmuteRunnable)
                     if (mutedForAd) {
                         endMuteSession()
                     } else {
@@ -128,6 +135,7 @@ class SpotifyAdMuteService : NotificationListenerService() {
     }
 
     override fun onDestroy() {
+        muteHandler.removeCallbacks(unmuteRunnable)
         muteHandler.removeCallbacks(idleRecheckRunnable)
         idleHandler.removeCallbacks(idleExitRunnable)
         unregisterSessionsMonitor()
@@ -257,11 +265,15 @@ class SpotifyAdMuteService : NotificationListenerService() {
     private fun applyAdStateFromSpotifyNotifications(spotify: List<StatusBarNotification>) {
         val anyAd = spotify.any { AdSignalDetector.isLikelyAd(it.notification) } ||
             spotifyAdSignalFromSessions(spotify)
+        if (anyAd) {
+            muteHandler.removeCallbacks(unmuteRunnable)
+        }
         when {
             anyAd && !mutedForAd -> beginMuteSession()
             !anyAd && mutedForAd -> {
                 if (!shouldDeferUnmuteDueToPausedOrQuietSpotify()) {
-                    endMuteSession()
+                    muteHandler.removeCallbacks(unmuteRunnable)
+                    muteHandler.postDelayed(unmuteRunnable, UNMUTE_DELAY_MS)
                 } else {
                     muteHandler.removeCallbacks(idleRecheckRunnable)
                     muteHandler.postDelayed(idleRecheckRunnable, EMPTY_REEVALUATION_MS)
@@ -416,6 +428,7 @@ class SpotifyAdMuteService : NotificationListenerService() {
     }
 
     override fun onListenerDisconnected() {
+        muteHandler.removeCallbacks(unmuteRunnable)
         if (mutedForAd) {
             endMuteSession()
         }
@@ -454,6 +467,7 @@ class SpotifyAdMuteService : NotificationListenerService() {
     }
 
     private fun beginMuteSession() {
+        muteHandler.removeCallbacks(unmuteRunnable)
         muteHandler.removeCallbacks(idleRecheckRunnable)
         savedMusicVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
         savedBluetoothScoVolume =
@@ -543,6 +557,7 @@ class SpotifyAdMuteService : NotificationListenerService() {
 
         private const val STREAM_BLUETOOTH_SCO_LEGACY = 6
         private const val EMPTY_REEVALUATION_MS = 450L
+        private const val UNMUTE_DELAY_MS = 300L
         private const val LISTENER_CONNECTED_RETRY_MS = 1_500L
         /** No Spotify tray notification and not PLAYING for this long ⇒ optional auto-stop. */
         private const val IDLE_CLOSE_AFTER_MS = 15 * 60 * 1000L
