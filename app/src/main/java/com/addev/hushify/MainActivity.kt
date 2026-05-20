@@ -165,7 +165,7 @@ class MainActivity : ComponentActivity() {
     }
 
     /** Stops foreground keep-alive, unbinds the notification listener, and removes this task from recents. */
-    private fun closeAppUi() {
+    internal fun closeAppUi() {
         HushKeepAliveService.stop(applicationContext)
         SpotifyAdMuteService.sendFullStop(this)
         finishAndRemoveTask()
@@ -239,7 +239,7 @@ class MainActivity : ComponentActivity() {
         internal fun dismissIfOpenAfterIdleShutdown() {
             val activity = visibleInstance ?: return
             activity.runOnUiThread {
-                activity.finishAndRemoveTask()
+                activity.closeAppUi()
             }
         }
 

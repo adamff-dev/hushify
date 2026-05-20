@@ -90,9 +90,8 @@ class SpotifyAdMuteService : NotificationListenerService() {
 
     private val idleExitRunnable = Runnable {
         if (!isCloseOnIdleEnabled()) return@Runnable
-        val active = activeNotifications ?: return@Runnable
-        if (active.any { it.packageName == SPOTIFY_PACKAGE }) return@Runnable
-        if (isSpotifyPlaying()) return@Runnable
+        val active = activeNotifications
+        if (active != null && active.any { it.packageName == SPOTIFY_PACKAGE }) return@Runnable
         performIdleShutdownFromListener()
     }
 
@@ -168,8 +167,8 @@ class SpotifyAdMuteService : NotificationListenerService() {
     override fun onNotificationRankingUpdate(rankingMap: RankingMap) {
         super.onNotificationRankingUpdate(rankingMap)
         if (!mutedForAd) {
-            val active = activeNotifications ?: return
-            if (active.none { it.packageName == SPOTIFY_PACKAGE } && !hasSpotifyMediaSession()) {
+            val active = activeNotifications
+            if (active == null || active.none { it.packageName == SPOTIFY_PACKAGE }) {
                 scheduleIdleCloseIfNeeded()
                 return
             }
@@ -291,9 +290,8 @@ class SpotifyAdMuteService : NotificationListenerService() {
     private fun scheduleIdleCloseIfNeeded() {
         idleHandler.removeCallbacks(idleExitRunnable)
         if (!isCloseOnIdleEnabled()) return
-        val active = activeNotifications ?: return
-        if (active.any { it.packageName == SPOTIFY_PACKAGE }) return
-        if (isSpotifyPlaying()) return
+        val active = activeNotifications
+        if (active != null && active.any { it.packageName == SPOTIFY_PACKAGE }) return
         idleHandler.postDelayed(idleExitRunnable, IDLE_CLOSE_AFTER_MS)
     }
 
