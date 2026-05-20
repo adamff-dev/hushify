@@ -77,10 +77,11 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        attachVisibleInstance(this)
         val prefsForLaunchCheck = getSharedPreferences(PREFS_FILE, MODE_PRIVATE)
         if (savedInstanceState == null && prefsForLaunchCheck.getBoolean(KEY_AUTO_OPEN_SPOTIFY, false)) {
             Toast.makeText(this, R.string.toast_opening_spotify, Toast.LENGTH_SHORT).show()
-            mainHandler.postDelayed(deferredAutoOpenSpotify, AUTO_OPEN_SPOTIFY_DELAY_MS)
+            mainHandler.post(deferredAutoOpenSpotify)
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             postNotificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
@@ -90,6 +91,9 @@ class MainActivity : ComponentActivity() {
             val prefs = remember { getSharedPreferences(PREFS_FILE, MODE_PRIVATE) }
             var autoOpenSpotify by remember {
                 mutableStateOf(prefs.getBoolean(KEY_AUTO_OPEN_SPOTIFY, false))
+            }
+            var closeOnSpotifyIdle by remember {
+                mutableStateOf(prefs.getBoolean(KEY_CLOSE_ON_SPOTIFY_IDLE, false))
             }
             val lifecycleOwner = LocalLifecycleOwner.current
             var listenerEnabled by remember { mutableStateOf(syncListenerAndKeepAlive()) }
@@ -135,6 +139,17 @@ class MainActivity : ComponentActivity() {
                                 mainHandler.removeCallbacks(deferredAutoOpenSpotify)
                             }
                         },
+                        closeOnSpotifyIdleEnabled = closeOnSpotifyIdle,
+                        onCloseOnSpotifyIdleChange = { enabled ->
+                            prefs.edit().putBoolean(KEY_CLOSE_ON_SPOTIFY_IDLE, enabled).apply()
+                            closeOnSpotifyIdle = enabled
+                            val action = if (enabled) {
+                                SpotifyAdMuteService.ACTION_PROBE_IDLE_SHUTDOWN
+                            } else {
+                                SpotifyAdMuteService.ACTION_CANCEL_IDLE_SHUTDOWN
+                            }
+                            sendBroadcast(Intent(action).setPackage(packageName))
+                        },
                         onExitClick = { closeAppUi() },
                         modifier = Modifier.fillMaxSize()
                     )
@@ -145,6 +160,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         mainHandler.removeCallbacks(deferredAutoOpenSpotify)
+        detachVisibleInstance(this)
         super.onDestroy()
     }
 
@@ -207,9 +223,28 @@ class MainActivity : ComponentActivity() {
     }
 
     companion object {
-        private const val PREFS_FILE = "hushify_prefs"
+        internal const val PREFS_FILE = "hushify_prefs"
+
+        /** Visible [MainActivity] for optional UI dismissal after idle shutdown from [SpotifyAdMuteService]. */
+        private var visibleInstance: MainActivity? = null
+
+        private fun attachVisibleInstance(activity: MainActivity) {
+            visibleInstance = activity
+        }
+
+        private fun detachVisibleInstance(activity: MainActivity) {
+            if (visibleInstance === activity) visibleInstance = null
+        }
+
+        internal fun dismissIfOpenAfterIdleShutdown() {
+            val activity = visibleInstance ?: return
+            activity.runOnUiThread {
+                activity.finishAndRemoveTask()
+            }
+        }
+
         private const val KEY_AUTO_OPEN_SPOTIFY = "auto_open_spotify"
-        private const val AUTO_OPEN_SPOTIFY_DELAY_MS = 2_800L
+        internal const val KEY_CLOSE_ON_SPOTIFY_IDLE = "close_on_spotify_idle"
     }
 }
 
@@ -224,6 +259,8 @@ private fun MainScreen(
     onOpenSpotifyClick: () -> Unit,
     autoOpenSpotifyEnabled: Boolean,
     onAutoOpenSpotifyChange: (Boolean) -> Unit,
+    closeOnSpotifyIdleEnabled: Boolean,
+    onCloseOnSpotifyIdleChange: (Boolean) -> Unit,
     onExitClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -297,23 +334,6 @@ private fun MainScreen(
             }
         }
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Text(
-                text = stringResource(R.string.pref_auto_launch_spotify),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.weight(1f)
-            )
-            Switch(
-                checked = autoOpenSpotifyEnabled,
-                onCheckedChange = onAutoOpenSpotifyChange
-            )
-        }
-
         if (!listenerEnabled) {
             Button(
                 onClick = onGrantClick,
@@ -354,8 +374,40 @@ private fun MainScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.pref_auto_launch_spotify),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f)
+            )
+            Switch(
+                checked = autoOpenSpotifyEnabled,
+                onCheckedChange = onAutoOpenSpotifyChange
+            )
+        }
 
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.pref_close_when_spotify_idle),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f)
+            )
+            Switch(
+                checked = closeOnSpotifyIdleEnabled,
+                onCheckedChange = onCloseOnSpotifyIdleChange
+            )
+        }
+        
         TextButton(
             onClick = onDonateClick,
             modifier = Modifier.fillMaxWidth()
@@ -464,6 +516,8 @@ private fun MainScreenPreview() {
             onOpenSpotifyClick = {},
             autoOpenSpotifyEnabled = false,
             onAutoOpenSpotifyChange = {},
+            closeOnSpotifyIdleEnabled = false,
+            onCloseOnSpotifyIdleChange = {},
             onExitClick = {}
         )
     }
