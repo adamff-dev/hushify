@@ -31,4 +31,10 @@
     <string name="donation_paypal_cd">Doneren met PayPal</string>
     <string name="donation_buymeacoffee_cd">Doneren met Buy Me a Coffee</string>
     <string name="donation_kofi_cd">Doneren met Ko-fi</string>
+
+    <string name="cta_open_spotify">Spotify openen</string>
+    <string name="pref_auto_launch_spotify">Spotify openen bij het openen van Hushify</string>
+    <string name="pref_close_when_spotify_idle">App sluiten wanneer Spotify inactief is</string>
+    <string name="toast_opening_spotify">Spotify wordt geopend…</string>
+    <string name="toast_spotify_not_installed">Spotify is niet geïnstalleerd</string>
 </resources>

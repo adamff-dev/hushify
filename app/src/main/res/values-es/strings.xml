@@ -18,6 +18,7 @@
     <string name="cta_disable_battery_optimization">Sin restricciones de batería</string>
     <string name="cta_open_spotify">Abrir Spotify</string>
     <string name="pref_auto_launch_spotify">Abrir Spotify al abrir Hushify</string>
+    <string name="pref_close_when_spotify_idle">Cerrar si Spotify está inactivo</string>
     <string name="toast_opening_spotify">Abriendo Spotify…</string>
     <string name="toast_spotify_not_installed">Spotify no está instalado</string>
     <string name="cta_exit_app">Detener servicio</string>

@@ -31,4 +31,10 @@
     <string name="donation_paypal_cd">使用 PayPal 贊助</string>
     <string name="donation_buymeacoffee_cd">使用 Buy Me a Coffee 贊助</string>
     <string name="donation_kofi_cd">使用 Ko-fi 贊助</string>
+
+    <string name="cta_open_spotify">開啟 Spotify</string>
+    <string name="pref_auto_launch_spotify">開啟 Hushify 時開啟 Spotify</string>
+    <string name="pref_close_when_spotify_idle">當 Spotify 閒置時關閉應用</string>
+    <string name="toast_opening_spotify">正在開啟 Spotify…</string>
+    <string name="toast_spotify_not_installed">Spotify 未安裝</string>
 </resources>

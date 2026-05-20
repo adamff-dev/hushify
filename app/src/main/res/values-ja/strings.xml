@@ -31,4 +31,10 @@
     <string name="donation_paypal_cd">PayPalで寄付</string>
     <string name="donation_buymeacoffee_cd">Buy Me a Coffeeで寄付</string>
     <string name="donation_kofi_cd">Ko-fiで寄付</string>
+
+    <string name="cta_open_spotify">Spotifyを開く</string>
+    <string name="pref_auto_launch_spotify">Hushify起動時にSpotifyを開く</string>
+    <string name="pref_close_when_spotify_idle">Spotifyが非アクティブのときにアプリを閉じる</string>
+    <string name="toast_opening_spotify">Spotifyを開いています…</string>
+    <string name="toast_spotify_not_installed">Spotifyがインストールされていません</string>
 </resources>

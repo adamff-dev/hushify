@@ -31,4 +31,10 @@
     <string name="donation_paypal_cd">تبرع عبر PayPal</string>
     <string name="donation_buymeacoffee_cd">تبرع عبر Buy Me a Coffee</string>
     <string name="donation_kofi_cd">تبرع عبر Ko-fi</string>
+
+    <string name="cta_open_spotify">فتح Spotify</string>
+    <string name="pref_auto_launch_spotify">فتح Spotify عند فتح Hushify</string>
+    <string name="pref_close_when_spotify_idle">إغلاق التطبيق عندما تكون Spotify في وضع عدم النشاط</string>
+    <string name="toast_opening_spotify">فتح Spotify…</string>
+    <string name="toast_spotify_not_installed">Spotify غير مثبت</string>
 </resources>

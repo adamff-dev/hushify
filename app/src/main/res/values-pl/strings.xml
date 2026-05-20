@@ -31,4 +31,10 @@
     <string name="donation_paypal_cd">Darowizna przez PayPal</string>
     <string name="donation_buymeacoffee_cd">Darowizna przez Buy Me a Coffee</string>
     <string name="donation_kofi_cd">Darowizna przez Ko-fi</string>
+
+    <string name="cta_open_spotify">Otwórz Spotify</string>
+    <string name="pref_auto_launch_spotify">Otwórz Spotify przy otwieraniu Hushify</string>
+    <string name="pref_close_when_spotify_idle">Zamknij aplikację, gdy Spotify jest bezczynny</string>
+    <string name="toast_opening_spotify">Otwieranie Spotify…</string>
+    <string name="toast_spotify_not_installed">Spotify nie jest zainstalowany</string>
 </resources>

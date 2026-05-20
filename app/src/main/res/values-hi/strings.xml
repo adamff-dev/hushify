@@ -31,4 +31,10 @@
     <string name="donation_paypal_cd">PayPal से दान</string>
     <string name="donation_buymeacoffee_cd">Buy Me a Coffee से दान</string>
     <string name="donation_kofi_cd">Ko-fi से दान</string>
+
+    <string name="cta_open_spotify">Spotify खोलें</string>
+    <string name="pref_auto_launch_spotify">Hushify खोलते समय Spotify खोलें</string>
+    <string name="pref_close_when_spotify_idle">Spotify निष्क्रिय होने पर ऐप बंद करें</string>
+    <string name="toast_opening_spotify">Spotify खोल रहा है…</string>
+    <string name="toast_spotify_not_installed">Spotify स्थापित नहीं है</string>
 </resources>

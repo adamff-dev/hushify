@@ -31,4 +31,10 @@
     <string name="donation_paypal_cd">Quyên góp qua PayPal</string>
     <string name="donation_buymeacoffee_cd">Quyên góp qua Buy Me a Coffee</string>
     <string name="donation_kofi_cd">Quyên góp qua Ko-fi</string>
+
+    <string name="cta_open_spotify">Mở Spotify</string>
+    <string name="pref_auto_launch_spotify">Mở Spotify khi mở Hushify</string>
+    <string name="pref_close_when_spotify_idle">Đóng ứng dụng khi Spotify không hoạt động</string>
+    <string name="toast_opening_spotify">Đang mở Spotify…</string>
+    <string name="toast_spotify_not_installed">Spotify chưa được cài đặt</string>
 </resources>
