@@ -11,6 +11,7 @@ import android.app.Notification
 import android.media.AudioDeviceCallback
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
+import android.media.MediaMetadata
 import android.media.session.MediaController
 import android.media.session.MediaSession
 import android.media.session.MediaSessionManager
@@ -41,11 +42,27 @@ class SpotifyAdMuteService : NotificationListenerService() {
     private var savedBluetoothScoVolume: Int = -1
     private var mutedForAd = false
 
-    /** True while at least one Spotify notification is visible to this listener (package filter). */
-    private var hadSpotifyNotificationsInTray = false
+    /**
+     * True after we've shown [R.string.toast_listener_connected] for this bind.
+     * Spotify often has no (or no usable) notification row while still exposing a media session;
+     * toast and ad checks must use tray and/or [hasSpotifyMediaSession].
+     */
+    private var announcedSpotifyWatching = false
 
-    /** Elapsed-realtime ms of last Spotify-listening toast (debounce double-fires from connect + tray edge). */
+    /** Elapsed-realtime ms of last Spotify-listening toast (debounce duplicate UI events). */
     private var lastSpotifyListeningToastElapsed = 0L
+
+    private var sessionsMonitorRegistered = false
+    private var watchedSpotifyController: MediaController? = null
+    private var watchedSpotifyCallback: MediaController.Callback? = null
+
+    private val activeSessionsChangedListener =
+        MediaSessionManager.OnActiveSessionsChangedListener {
+            muteHandler.post {
+                ensureSpotifyMediaControllerWatch()
+                reevaluateSpotifyFromActive()
+            }
+        }
 
     private val audioDeviceCallback = object : AudioDeviceCallback() {
         override fun onAudioDevicesAdded(addedDevices: Array<out AudioDeviceInfo>) {
@@ -57,43 +74,66 @@ class SpotifyAdMuteService : NotificationListenerService() {
         }
     }
 
+    private val idleHandler = Handler(Looper.getMainLooper())
+
     private val idleRecheckRunnable = Runnable {
         val active = activeNotifications ?: return@Runnable
         val spotify = active.filter { it.packageName == SPOTIFY_PACKAGE }
         applyAdStateFromSpotifyNotifications(spotify)
     }
 
-    private val fullStopReceiver = object : BroadcastReceiver() {
+    private val idleExitRunnable = Runnable {
+        if (!isCloseOnIdleEnabled()) return@Runnable
+        val active = activeNotifications ?: return@Runnable
+        if (active.any { it.packageName == SPOTIFY_PACKAGE }) return@Runnable
+        if (isSpotifyPlaying()) return@Runnable
+        performIdleShutdownFromListener()
+    }
+
+    private val controlReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent?) {
-            if (intent?.action != ACTION_STOP_FULLY) return
-            if (mutedForAd) {
-                endMuteSession()
-            } else {
-                dismissPassiveMuteNotification()
-            }
-            HushKeepAliveService.stop(this@SpotifyAdMuteService)
-            try {
-                requestUnbind()
-            } catch (_: RuntimeException) {
+            when (intent?.action) {
+                ACTION_CANCEL_IDLE_SHUTDOWN -> idleHandler.removeCallbacks(idleExitRunnable)
+                ACTION_PROBE_IDLE_SHUTDOWN -> scheduleIdleCloseIfNeeded()
+                ACTION_STOP_FULLY -> {
+                    idleHandler.removeCallbacks(idleExitRunnable)
+                    if (mutedForAd) {
+                        endMuteSession()
+                    } else {
+                        dismissPassiveMuteNotification()
+                    }
+                    HushKeepAliveService.stop(this@SpotifyAdMuteService)
+                    try {
+                        requestUnbind()
+                    } catch (_: RuntimeException) {
+                    }
+                }
             }
         }
     }
 
     override fun onCreate() {
         super.onCreate()
-        val filter = IntentFilter(ACTION_STOP_FULLY)
+        val filter = IntentFilter().apply {
+            addAction(ACTION_STOP_FULLY)
+            addAction(ACTION_CANCEL_IDLE_SHUTDOWN)
+            addAction(ACTION_PROBE_IDLE_SHUTDOWN)
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(fullStopReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+            registerReceiver(controlReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
         } else {
             @Suppress("DEPRECATION")
-            registerReceiver(fullStopReceiver, filter)
+            registerReceiver(controlReceiver, filter)
         }
     }
 
     override fun onDestroy() {
         muteHandler.removeCallbacks(idleRecheckRunnable)
+        idleHandler.removeCallbacks(idleExitRunnable)
+        unregisterSessionsMonitor()
+        clearSpotifyMediaControllerWatch()
         try {
-            unregisterReceiver(fullStopReceiver)
+            unregisterReceiver(controlReceiver)
         } catch (_: IllegalArgumentException) {
         }
         super.onDestroy()
@@ -103,11 +143,13 @@ class SpotifyAdMuteService : NotificationListenerService() {
         super.onListenerConnected()
         ensurePassiveChannel()
         HushKeepAliveService.start(this)
-        hadSpotifyNotificationsInTray =
-            activeNotifications?.any { it.packageName == SPOTIFY_PACKAGE } ?: false
-        if (hadSpotifyNotificationsInTray) {
-            showSpotifyListeningToast()
-        }
+        announcedSpotifyWatching = false
+        registerSessionsMonitor()
+        reevaluateSpotifyFromActive()
+        // Retry after a short delay: media sessions may not be surfaced to the listener
+        // immediately on binding, so a deferred check catches Spotify already playing.
+        muteHandler.postDelayed({ reevaluateSpotifyFromActive() }, LISTENER_CONNECTED_RETRY_MS)
+        scheduleIdleCloseIfNeeded()
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
@@ -119,7 +161,10 @@ class SpotifyAdMuteService : NotificationListenerService() {
         super.onNotificationRankingUpdate(rankingMap)
         if (!mutedForAd) {
             val active = activeNotifications ?: return
-            if (active.none { it.packageName == SPOTIFY_PACKAGE }) return
+            if (active.none { it.packageName == SPOTIFY_PACKAGE } && !hasSpotifyMediaSession()) {
+                scheduleIdleCloseIfNeeded()
+                return
+            }
         }
         reevaluateSpotifyFromActive()
     }
@@ -132,29 +177,84 @@ class SpotifyAdMuteService : NotificationListenerService() {
     private fun reevaluateSpotifyFromActive() {
         muteHandler.removeCallbacks(idleRecheckRunnable)
         val active = activeNotifications ?: return
-        toastIfSpotifyNewlyReturnedToTray(active)
+        toastIfSpotifyDetectedFirstTime(active)
         val spotify = active.filter { it.packageName == SPOTIFY_PACKAGE }
-        if (spotify.isEmpty()) {
-            if (mutedForAd) {
-                muteHandler.postDelayed(idleRecheckRunnable, EMPTY_REEVALUATION_MS)
-            }
+        applyAdStateFromSpotifyNotifications(spotify)
+        ensureSpotifyMediaControllerWatch()
+    }
+
+    /** Tray alone misses many devices; Spotify can still expose a controllable media session. */
+    private fun hasSpotifyMediaSession(): Boolean {
+        val msm = getSystemService(MEDIA_SESSION_SERVICE) as? MediaSessionManager ?: return false
+        val component = ComponentName(this, SpotifyAdMuteService::class.java)
+        return try {
+            msm.getActiveSessions(component).any { it.packageName == SPOTIFY_PACKAGE }
+        } catch (_: SecurityException) {
+            false
+        }
+    }
+
+    private fun registerSessionsMonitor() {
+        if (sessionsMonitorRegistered) return
+        val msm = getSystemService(MEDIA_SESSION_SERVICE) as? MediaSessionManager ?: return
+        val cn = ComponentName(this, SpotifyAdMuteService::class.java)
+        try {
+            msm.addOnActiveSessionsChangedListener(activeSessionsChangedListener, cn, muteHandler)
+            sessionsMonitorRegistered = true
+        } catch (_: SecurityException) {
+        }
+    }
+
+    private fun unregisterSessionsMonitor() {
+        if (!sessionsMonitorRegistered) return
+        sessionsMonitorRegistered = false
+        val msm = getSystemService(MEDIA_SESSION_SERVICE) as? MediaSessionManager ?: return
+        try {
+            msm.removeOnActiveSessionsChangedListener(activeSessionsChangedListener)
+        } catch (_: SecurityException) {
+        }
+    }
+
+    /**
+     * Ad titles often arrive only via [MediaMetadata] updates, not ranking/posted churn.
+     * Register once per distinct [MediaController] instance.
+     */
+    private fun ensureSpotifyMediaControllerWatch() {
+        val controller = primarySpotifyController()
+        if (controller == null) {
+            clearSpotifyMediaControllerWatch()
             return
         }
-        applyAdStateFromSpotifyNotifications(spotify)
+        if (watchedSpotifyController === controller) return
+        clearSpotifyMediaControllerWatch()
+        watchedSpotifyController = controller
+        val cb = object : MediaController.Callback() {
+            override fun onMetadataChanged(metadata: MediaMetadata?) {
+                muteHandler.post { reevaluateSpotifyFromActive() }
+            }
+
+            override fun onPlaybackStateChanged(state: PlaybackState?) {
+                muteHandler.post { reevaluateSpotifyFromActive() }
+            }
+        }
+        watchedSpotifyCallback = cb
+        controller.registerCallback(cb, muteHandler)
+    }
+
+    private fun clearSpotifyMediaControllerWatch() {
+        val c = watchedSpotifyController
+        val cb = watchedSpotifyCallback
+        if (c != null && cb != null) {
+            try {
+                c.unregisterCallback(cb)
+            } catch (_: Exception) {
+            }
+        }
+        watchedSpotifyController = null
+        watchedSpotifyCallback = null
     }
 
     private fun applyAdStateFromSpotifyNotifications(spotify: List<StatusBarNotification>) {
-        if (spotify.isEmpty()) {
-            if (mutedForAd) {
-                if (shouldDeferUnmuteDueToPausedOrQuietSpotify()) {
-                    muteHandler.removeCallbacks(idleRecheckRunnable)
-                    muteHandler.postDelayed(idleRecheckRunnable, EMPTY_REEVALUATION_MS)
-                } else {
-                    endMuteSession()
-                }
-            }
-            return
-        }
         val anyAd = spotify.any { AdSignalDetector.isLikelyAd(it.notification) } ||
             spotifyAdSignalFromSessions(spotify)
         when {
@@ -168,6 +268,32 @@ class SpotifyAdMuteService : NotificationListenerService() {
                 }
             }
         }
+        scheduleIdleCloseIfNeeded()
+    }
+
+    private fun isCloseOnIdleEnabled(): Boolean {
+        return applicationContext.getSharedPreferences(MainActivity.PREFS_FILE, Context.MODE_PRIVATE)
+            .getBoolean(MainActivity.KEY_CLOSE_ON_SPOTIFY_IDLE, false)
+    }
+
+    private fun scheduleIdleCloseIfNeeded() {
+        idleHandler.removeCallbacks(idleExitRunnable)
+        if (!isCloseOnIdleEnabled()) return
+        val active = activeNotifications ?: return
+        if (active.any { it.packageName == SPOTIFY_PACKAGE }) return
+        if (isSpotifyPlaying()) return
+        idleHandler.postDelayed(idleExitRunnable, IDLE_CLOSE_AFTER_MS)
+    }
+
+    private fun isSpotifyPlaying(): Boolean {
+        val controller = primarySpotifyController() ?: return false
+        val state = controller.playbackState?.state ?: return false
+        return state == PlaybackState.STATE_PLAYING
+    }
+
+    private fun performIdleShutdownFromListener() {
+        SpotifyAdMuteService.sendFullStop(applicationContext)
+        muteHandler.post { MainActivity.dismissIfOpenAfterIdleShutdown() }
     }
 
     private fun primarySpotifyController(): MediaController? {
@@ -197,8 +323,42 @@ class SpotifyAdMuteService : NotificationListenerService() {
      * Spotify often shows titles like "Anuncio" via [MediaMetadata] tied to EXTRA_MEDIA_SESSION
      * rather than flattened notification extras — read that path and enumerate active controllers
      * as a fallback.
+     *
+     * Also checks the Android-standard [MediaMetadata.METADATA_KEY_ADVERTISEMENT] long flag and
+     * the Spotify-specific "spotify:ad:" URI prefix, both of which modern Spotify uses to mark ads
+     * without embedding localised "Advertisement" text in the notification.
      */
     private fun spotifyAdSignalFromSessions(spotify: List<StatusBarNotification>): Boolean {
+        // Check via media session tokens linked directly to each Spotify notification.
+        for (sbn in spotify) {
+            val extras = sbn.notification.extras ?: continue
+            val token = extras.mediaSessionToken() ?: continue
+            try {
+                val controller = MediaController(this, token)
+                if (controller.packageName != SPOTIFY_PACKAGE) continue
+                val metadata = controller.metadata
+                if (AdSignalDetector.isAdByMetadataFlag(metadata)) return true
+                if (AdSignalDetector.isAdByMediaId(metadata)) return true
+            } catch (_: IllegalArgumentException) {
+            }
+        }
+        // Check via all active Spotify sessions (covers the case where there is no tray
+        // notification but Spotify still owns a live MediaSession).
+        val msm = getSystemService(MEDIA_SESSION_SERVICE) as? MediaSessionManager
+        if (msm != null) {
+            val component = ComponentName(this, SpotifyAdMuteService::class.java)
+            try {
+                for (controller in msm.getActiveSessions(component)) {
+                    if (controller.packageName != SPOTIFY_PACKAGE) continue
+                    val metadata = controller.metadata
+                    if (AdSignalDetector.isAdByMetadataFlag(metadata)) return true
+                    if (AdSignalDetector.isAdByMediaId(metadata)) return true
+                }
+            } catch (_: SecurityException) {
+            }
+        }
+        // Fall back to the text-phrase heuristic for older Spotify builds that still embed
+        // localised "Advertisement" (or equivalent) in the notification payload.
         val fromLinkedTokens = supplementarySpotifyTextFromLinkedSessions(spotify)
         if (fromLinkedTokens.isNotBlank() && AdSignalDetector.appliesAdPhraseHeuristic(fromLinkedTokens)) {
             return true
@@ -259,8 +419,10 @@ class SpotifyAdMuteService : NotificationListenerService() {
         if (mutedForAd) {
             endMuteSession()
         }
+        unregisterSessionsMonitor()
+        clearSpotifyMediaControllerWatch()
         HushKeepAliveService.stop(this)
-        hadSpotifyNotificationsInTray = false
+        announcedSpotifyWatching = false
         lastSpotifyListeningToastElapsed = 0L
         super.onListenerDisconnected()
     }
@@ -282,13 +444,13 @@ class SpotifyAdMuteService : NotificationListenerService() {
         }
     }
 
-    /** When Spotify had no tray notification (e.g. app force-stopped) and posts again. */
-    private fun toastIfSpotifyNewlyReturnedToTray(active: Array<StatusBarNotification>) {
-        val nowHasSpotifyTray = active.any { it.packageName == SPOTIFY_PACKAGE }
-        if (nowHasSpotifyTray && !hadSpotifyNotificationsInTray) {
-            showSpotifyListeningToast()
-        }
-        hadSpotifyNotificationsInTray = nowHasSpotifyTray
+    /** Toast once per listener bind when Spotify is visible via notification and/or media session. */
+    private fun toastIfSpotifyDetectedFirstTime(active: Array<StatusBarNotification>) {
+        if (announcedSpotifyWatching) return
+        val seesTray = active.any { it.packageName == SPOTIFY_PACKAGE }
+        if (!seesTray && !hasSpotifyMediaSession()) return
+        announcedSpotifyWatching = true
+        showSpotifyListeningToast()
     }
 
     private fun beginMuteSession() {
@@ -375,9 +537,15 @@ class SpotifyAdMuteService : NotificationListenerService() {
     companion object {
         const val SPOTIFY_PACKAGE = "com.spotify.music"
         const val ACTION_STOP_FULLY = "com.addev.hushify.action.STOP_FULLY"
+        const val ACTION_CANCEL_IDLE_SHUTDOWN = "com.addev.hushify.action.CANCEL_IDLE_SHUTDOWN"
+        /** Triggers [SpotifyAdMuteService.scheduleIdleCloseIfNeeded] from UI when prefs change. */
+        const val ACTION_PROBE_IDLE_SHUTDOWN = "com.addev.hushify.action.PROBE_IDLE_SHUTDOWN"
 
         private const val STREAM_BLUETOOTH_SCO_LEGACY = 6
         private const val EMPTY_REEVALUATION_MS = 450L
+        private const val LISTENER_CONNECTED_RETRY_MS = 1_500L
+        /** No Spotify tray notification and not PLAYING for this long ⇒ optional auto-stop. */
+        private const val IDLE_CLOSE_AFTER_MS = 15 * 60 * 1000L
         private const val SPOTIFY_LISTENING_TOAST_DEBOUNCE_MS = 2_500L
         private const val CHANNEL_PASSIVE_ID = "hushify_passive"
         private const val PASSIVE_NOTIFICATION_ID = 0x6855
